@@ -1,0 +1,263 @@
+[
+  {
+    "id": "WR-2025029",
+    "priority": "Medium",
+    "status": "Closed",
+    "title": "P-AAA00990",
+    "location": "Map Ta Phut",
+    "dueDate": "2026-09-19",
+    "assignee": null
+  },
+  {
+    "id": "WR-2025001",
+    "priority": "Low",
+    "status": "Pending",
+    "title": "Routine pump inspection — P-1203",
+    "location": "Rayong Refinery",
+    "dueDate": "2025-09-06",
+    "assignee": null
+  },
+  {
+    "id": "WR-2025002",
+    "priority": "Medium",
+    "status": "Assigned",
+    "title": "Replace corroded pipe segment Line-7B",
+    "location": "Map Ta Phut",
+    "dueDate": "2025-09-07",
+    "assignee": "Manop Songsuk"
+  },
+  {
+    "id": "WR-2025003",
+    "priority": "High",
+    "status": "Accepted",
+    "title": "Annual pressure vessel certification",
+    "location": "Sriracha Plant",
+    "dueDate": "2025-09-08",
+    "assignee": "Pipob Suksan"
+  },
+  {
+    "id": "WR-2025004",
+    "priority": "Critical",
+    "status": "In Progress",
+    "title": "Scaffold erection at Tower C-4",
+    "location": "Bangkok HQ",
+    "dueDate": "2025-09-09",
+    "assignee": "Chala Inthara"
+  },
+  {
+    "id": "WR-2025005",
+    "priority": "Low",
+    "status": "Review",
+    "title": "Emergency leak repair, Tank Farm 2",
+    "location": "Chonburi Yard",
+    "dueDate": "2025-09-10",
+    "assignee": "Prida Charoensuk"
+  },
+  {
+    "id": "WR-2025006",
+    "priority": "Medium",
+    "status": "Completed",
+    "title": "Electrical panel thermal scan",
+    "location": "Rayong Refinery",
+    "dueDate": "2025-09-11",
+    "assignee": "Jira Rakthai"
+  },
+  {
+    "id": "WR-2025007",
+    "priority": "High",
+    "status": "Closed",
+    "title": "Crane preventive maintenance CH-08",
+    "location": "Map Ta Phut",
+    "dueDate": "2025-09-12",
+    "assignee": "Panu Boonmee"
+  },
+  {
+    "id": "WR-2025008",
+    "priority": "Critical",
+    "status": "Pending",
+    "title": "NDT ultrasonic test on weld joints",
+    "location": "Sriracha Plant",
+    "dueDate": "2025-09-13",
+    "assignee": null
+  },
+  {
+    "id": "WR-2025009",
+    "priority": "Low",
+    "status": "Assigned",
+    "title": "HSE walkdown — Unit 300",
+    "location": "Bangkok HQ",
+    "dueDate": "2025-09-14",
+    "assignee": "Ekachai Jaidee"
+  },
+  {
+    "id": "WR-2025010",
+    "priority": "Medium",
+    "status": "Accepted",
+    "title": "Instrument calibration loop check",
+    "location": "Chonburi Yard",
+    "dueDate": "2025-09-15",
+    "assignee": "Anchalee Songsuk"
+  },
+  {
+    "id": "WR-2025011",
+    "priority": "High",
+    "status": "In Progress",
+    "title": "Valve overhaul V-2245",
+    "location": "Rayong Refinery",
+    "dueDate": "2025-09-16",
+    "assignee": "Wichai Suksan"
+  },
+  {
+    "id": "WR-2025012",
+    "priority": "Critical",
+    "status": "Review",
+    "title": "Heat exchanger cleaning E-105",
+    "location": "Map Ta Phut",
+    "dueDate": "2025-09-17",
+    "assignee": "Arun Inthara"
+  },
+  {
+    "id": "WR-2025013",
+    "priority": "Low",
+    "status": "Completed",
+    "title": "Routine pump inspection — P-1203",
+    "location": "Sriracha Plant",
+    "dueDate": "2025-09-18",
+    "assignee": "Kitti Charoensuk"
+  },
+  {
+    "id": "WR-2025014",
+    "priority": "Medium",
+    "status": "Closed",
+    "title": "Replace corroded pipe segment Line-7B",
+    "location": "Bangkok HQ",
+    "dueDate": "2025-09-19",
+    "assignee": "Somying Rakthai"
+  },
+  {
+    "id": "WR-2025015",
+    "priority": "High",
+    "status": "Pending",
+    "title": "Annual pressure vessel certification",
+    "location": "Chonburi Yard",
+    "dueDate": "2025-09-20",
+    "assignee": null
+  },
+  {
+    "id": "WR-2025016",
+    "priority": "Critical",
+    "status": "Assigned",
+    "title": "Scaffold erection at Tower C-4",
+    "location": "Rayong Refinery",
+    "dueDate": "2025-09-21",
+    "assignee": "Theera Pongpaiboon"
+  },
+  {
+    "id": "WR-2025017",
+    "priority": "Low",
+    "status": "Accepted",
+    "title": "Emergency leak repair, Tank Farm 2",
+    "location": "Map Ta Phut",
+    "dueDate": "2025-09-22",
+    "assignee": "Somchai Jaidee"
+  },
+  {
+    "id": "WR-2025018",
+    "priority": "Medium",
+    "status": "In Progress",
+    "title": "Electrical panel thermal scan",
+    "location": "Sriracha Plant",
+    "dueDate": "2025-09-23",
+    "assignee": "Manop Songsuk"
+  },
+  {
+    "id": "WR-2025019",
+    "priority": "High",
+    "status": "Review",
+    "title": "Crane preventive maintenance CH-08",
+    "location": "Bangkok HQ",
+    "dueDate": "2025-09-24",
+    "assignee": "Pipob Suksan"
+  },
+  {
+    "id": "WR-2025020",
+    "priority": "Critical",
+    "status": "Completed",
+    "title": "NDT ultrasonic test on weld joints",
+    "location": "Chonburi Yard",
+    "dueDate": "2025-09-25",
+    "assignee": "Chala Inthara"
+  },
+  {
+    "id": "WR-2025021",
+    "priority": "Low",
+    "status": "Closed",
+    "title": "HSE walkdown — Unit 300",
+    "location": "Rayong Refinery",
+    "dueDate": "2025-09-26",
+    "assignee": "Prida Charoensuk"
+  },
+  {
+    "id": "WR-2025022",
+    "priority": "Medium",
+    "status": "Pending",
+    "title": "Instrument calibration loop check",
+    "location": "Map Ta Phut",
+    "dueDate": "2025-09-27",
+    "assignee": null
+  },
+  {
+    "id": "WR-2025023",
+    "priority": "High",
+    "status": "Assigned",
+    "title": "Valve overhaul V-2245",
+    "location": "Sriracha Plant",
+    "dueDate": "2025-09-28",
+    "assignee": "Panu Boonmee"
+  },
+  {
+    "id": "WR-2025024",
+    "priority": "Critical",
+    "status": "Accepted",
+    "title": "Heat exchanger cleaning E-105",
+    "location": "Bangkok HQ",
+    "dueDate": "2025-09-01",
+    "assignee": "Anucha Pongpaiboon"
+  },
+  {
+    "id": "WR-2025025",
+    "priority": "Low",
+    "status": "In Progress",
+    "title": "Routine pump inspection — P-1203",
+    "location": "Chonburi Yard",
+    "dueDate": "2025-09-02",
+    "assignee": "Somchai Jaidee"
+  },
+  {
+    "id": "WR-2025026",
+    "priority": "Medium",
+    "status": "Review",
+    "title": "Replace corroded pipe segment Line-7B",
+    "location": "Rayong Refinery",
+    "dueDate": "2025-09-03",
+    "assignee": "Manop Songsuk"
+  },
+  {
+    "id": "WR-2025027",
+    "priority": "High",
+    "status": "Completed",
+    "title": "Annual pressure vessel certification",
+    "location": "Map Ta Phut",
+    "dueDate": "2025-09-04",
+    "assignee": "Pipob Suksan"
+  },
+  {
+    "id": "WR-2025028",
+    "priority": "Critical",
+    "status": "Closed",
+    "title": "Scaffold erection at Tower C-4",
+    "location": "Sriracha Plant",
+    "dueDate": "2025-09-05",
+    "assignee": "Chala Inthara"
+  }
+]

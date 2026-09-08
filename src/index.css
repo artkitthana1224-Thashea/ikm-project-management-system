@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ikm-orange: #F58220;
+  --color-ikm-orange-dark: #D9680F;
+  --color-ikm-orange-light: #FFF1E5;
+  --color-ikm-green: #16794B;
+  --color-ikm-green-secondary: #22A06B;
+  --color-ikm-green-light: #E8F5EE;
+  
+  --color-ikm-text: var(--color-text-main);
+  --color-ikm-text-secondary: var(--color-text-muted);
+  --color-ikm-bg: var(--color-bg-main);
+  --color-ikm-card: var(--color-bg-card);
+  --color-ikm-border: var(--color-border);
+  
+  /* Status Colors */
+  --color-status-green: #10B981;
+  --color-status-orange: #F59E0B;
+  --color-status-yellow: #EAB308;
+  --color-status-red: #EF4444;
+  --color-status-purple: #8B5CF6;
+  --color-status-blue: #3B82F6;
+  --color-status-gray: #6B7280;
+}
+
+:root {
+  --color-bg-main: #F6F8F7;
+  --color-bg-card: #FFFFFF;
+  --color-text-main: #1F2937;
+  --color-text-muted: #667085;
+  --color-border: #E5E7EB;
+}
+
+.dark {
+  --color-bg-main: #111827;
+  --color-bg-card: #1F2937;
+  --color-text-main: #F9FAFB;
+  --color-text-muted: #9CA3AF;
+  --color-border: #374151;
+  
+  /* Adjusting brand colors slightly for dark mode contrast if needed, but keeping primary brand intact */
+  --color-ikm-orange-light: #4c2d12;
+  --color-ikm-green-light: #0d3824;
+}
+
+body {
+  background-color: var(--color-ikm-bg);
+  color: var(--color-ikm-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
