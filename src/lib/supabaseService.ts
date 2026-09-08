@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Task, WorkRequest, TaskStatus } from '../types';
+import { Task, WorkRequest, TaskStatus, VoiceReport } from '../types';
 
 export interface Employee {
   id: string;
@@ -59,6 +59,30 @@ export interface SupabaseUserProfileRow {
   phone?: string | null;
   metadata?: any;
   department?: any;
+}
+
+export interface SupabaseVoiceReportRow {
+  id: string;
+  actor_id?: string | null;
+  action: string;
+  details: {
+    title?: string;
+    transcript?: string;
+    summary?: string;
+    category?: any;
+    priority?: any;
+    equipmentId?: string;
+    siteLocation?: string;
+    actionItems?: string[];
+    tags?: string[];
+    durationSeconds?: number;
+    language?: 'TH' | 'EN';
+    createdBy?: string;
+    followUpTaskId?: string;
+    status?: any;
+    [key: string]: any;
+  };
+  created_at: string;
 }
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -162,10 +186,35 @@ export function mapAppWorkRequestToSupabase(req: Partial<WorkRequest>): Partial<
   };
 }
 
+// Map Supabase audit_log voice row -> VoiceReport
+export function mapSupabaseVoiceReport(row: SupabaseVoiceReportRow): VoiceReport {
+  const d = row.details || {};
+  return {
+    id: row.id,
+    title: d.title || 'Voice Field Inspection Report',
+    transcript: d.transcript || '',
+    summary: d.summary || d.transcript || 'No summary available.',
+    category: d.category || 'Inspection',
+    priority: d.priority || 'Medium',
+    equipmentId: d.equipmentId || 'N/A',
+    siteLocation: d.siteLocation || 'Site Area',
+    actionItems: Array.isArray(d.actionItems) ? d.actionItems : ['Review report details'],
+    tags: Array.isArray(d.tags) ? d.tags : ['VoiceLog'],
+    durationSeconds: d.durationSeconds || 10,
+    language: d.language || 'TH',
+    createdAt: row.created_at,
+    createdBy: d.createdBy || 'Somchai Suksan',
+    createdById: row.actor_id || undefined,
+    followUpTaskId: d.followUpTaskId,
+    status: d.status || 'Recorded',
+  };
+}
+
 // Keep active channel references to prevent duplicate listener errors
 let activeTasksChannel: ReturnType<typeof supabase.channel> | null = null;
 let activeReqsChannel: ReturnType<typeof supabase.channel> | null = null;
 let activeProfilesChannel: ReturnType<typeof supabase.channel> | null = null;
+let activeVoiceChannel: ReturnType<typeof supabase.channel> | null = null;
 
 // --- API Service Methods ---
 export const SupabaseService = {
@@ -525,6 +574,119 @@ export const SupabaseService = {
     }
   },
 
+  // --- Voice Reports (Stored in Supabase audit_logs with action = 'voice_report') ---
+  async getVoiceReports(): Promise<VoiceReport[]> {
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('action', 'voice_report')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Supabase fetch voice reports error:', error);
+        return [];
+      }
+      return (data || []).map(row => mapSupabaseVoiceReport(row as any));
+    } catch (e) {
+      console.error('getVoiceReports exception:', e);
+      return [];
+    }
+  },
+
+  async createVoiceReport(report: Partial<VoiceReport>, createLinkedTask: boolean = false): Promise<VoiceReport | null> {
+    try {
+      let createdTaskId: string | undefined = undefined;
+
+      // Automatically create a linked task in Supabase tasks table if requested
+      if (createLinkedTask) {
+        const taskPayload: Partial<Task> = {
+          title: `[Voice Action] ${report.title || 'Field Follow-up'}`,
+          location: report.siteLocation || 'Site Area B',
+          priority: (report.priority as any) || 'High',
+          status: 'Assigned',
+        };
+        const task = await this.createTask(taskPayload);
+        if (task) {
+          createdTaskId = task.id;
+        }
+      }
+
+      const payload = {
+        action: 'voice_report',
+        details: {
+          title: report.title || 'Voice Field Report',
+          transcript: report.transcript || '',
+          summary: report.summary || '',
+          category: report.category || 'Inspection',
+          priority: report.priority || 'Medium',
+          equipmentId: report.equipmentId || 'N/A',
+          siteLocation: report.siteLocation || 'Site Area B',
+          actionItems: report.actionItems || ['Review report and conduct verification'],
+          tags: report.tags || ['VoiceReport', 'Inspection'],
+          durationSeconds: report.durationSeconds || 0,
+          language: report.language || 'TH',
+          createdBy: report.createdBy || 'Somchai Suksan',
+          followUpTaskId: createdTaskId || report.followUpTaskId,
+          status: report.status || 'Recorded',
+        }
+      };
+
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase createVoiceReport error:', error);
+        return null;
+      }
+
+      return mapSupabaseVoiceReport(data as any);
+    } catch (e) {
+      console.error('createVoiceReport exception:', e);
+      return null;
+    }
+  },
+
+  async deleteVoiceReport(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('audit_logs')
+        .delete()
+        .eq('id', id);
+
+      if (error) console.error('deleteVoiceReport error:', error);
+      return !error;
+    } catch (e) {
+      console.error('deleteVoiceReport exception:', e);
+      return false;
+    }
+  },
+
+  async updateVoiceReport(id: string, updates: Partial<VoiceReport>): Promise<boolean> {
+    try {
+      const { data: current } = await supabase.from('audit_logs').select('*').eq('id', id).single();
+      if (!current) return false;
+
+      const mergedDetails = {
+        ...current.details,
+        ...updates,
+      };
+
+      const { error } = await supabase
+        .from('audit_logs')
+        .update({ details: mergedDetails })
+        .eq('id', id);
+
+      return !error;
+    } catch (e) {
+      console.error('updateVoiceReport exception:', e);
+      return false;
+    }
+  },
+
   // Realtime Subscriptions (safely manage existing channels)
   subscribeToTasks(onUpdate: (payload: any) => void) {
     try {
@@ -604,6 +766,36 @@ export const SupabaseService = {
     }
   },
 
+  subscribeToVoiceReports(onUpdate: (payload: any) => void) {
+    try {
+      if (activeVoiceChannel) {
+        supabase.removeChannel(activeVoiceChannel);
+        activeVoiceChannel = null;
+      }
+      const uniqueId = `voice_rt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      activeVoiceChannel = supabase
+        .channel(uniqueId)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_logs' }, (payload) => {
+          if (payload.new && (payload.new as any).action === 'voice_report') {
+            onUpdate(payload);
+          } else if (payload.eventType === 'DELETE') {
+            onUpdate(payload);
+          }
+        })
+        .subscribe();
+
+      return () => {
+        if (activeVoiceChannel) {
+          supabase.removeChannel(activeVoiceChannel);
+          activeVoiceChannel = null;
+        }
+      };
+    } catch (err) {
+      console.warn('Realtime voice reports subscription caught:', err);
+      return () => {};
+    }
+  },
+
   // Ensure baseline operational data exists in Supabase so tables are populated
   async seedIfEmpty() {
     try {
@@ -638,6 +830,50 @@ export const SupabaseService = {
           { name: 'P-2026-010: Substation SCADA Modernization', description: 'Smart telemetry integration' },
         ];
         await supabase.from('projects').insert(initialProjects);
+      }
+
+      // Seed initial realistic voice reports if none exist
+      const { count: voiceCount } = await supabase.from('audit_logs').select('*', { count: 'exact', head: true }).eq('action', 'voice_report');
+      if (voiceCount === 0) {
+        const initialVoiceReports = [
+          {
+            action: 'voice_report',
+            details: {
+              title: 'ตรวจพบแรงดันตกในท่อส่งก๊าซหลัก Line-2A',
+              transcript: 'ระหว่างการเดินตรวจพื้นที่ Zone B ช่วงเช้า พบเกจวัดแรงดันที่ท่อ Line 2A ตกลงต่ำกว่า 4.2 Bar ขอให้ฝ่ายซ่อมบำรุงเข้ามาเช็ควาล์วควบคุมด่วน',
+              summary: 'ตรวจพบแรงดันในท่อ Line-2A ลดลงต่ำกว่าเกณฑ์มาตรฐาน 4.2 Bar บริเวณ Zone B แนะนำเข้าตรวจสอบวาล์วควบคุมและซีลข้อต่อทันที',
+              category: 'Mechanical',
+              priority: 'Critical',
+              equipmentId: 'PIPE-LINE-2A',
+              siteLocation: 'Zone B - Compressor Yard',
+              actionItems: ['ปิดการจ่ายก๊าซสำรอง', 'เข้าตรวจสอบซีลเกลียวและจุดเชื่อม', 'ทดสอบแรงดันซ้ำ Hydrostatic Test'],
+              tags: ['GasLine', 'PressureDrop', 'Critical', 'P-2026-018'],
+              durationSeconds: 18,
+              language: 'TH',
+              createdBy: 'Somchai Suksan',
+              status: 'Actioned',
+            }
+          },
+          {
+            action: 'voice_report',
+            details: {
+              title: 'Turbine Vibration & Temperature Routine Check',
+              transcript: 'Completed daily acoustic and thermal imaging inspection on Turbine B. Vibration level measured at 2.4 mm/s, bearing temperature stable at 68 degrees Celsius. All parameters within ISO acceptable limits.',
+              summary: 'Daily routine inspection for Turbine B completed successfully. Vibration and bearing temperature are fully within safe operating limits.',
+              category: 'Inspection',
+              priority: 'Low',
+              equipmentId: 'TURBINE-02B',
+              siteLocation: 'Powerhouse Unit 2',
+              actionItems: ['Log vibration data into CMMS', 'Schedule next routine check for tomorrow 08:00'],
+              tags: ['Turbine', 'Vibration', 'Routine', 'Passed'],
+              durationSeconds: 24,
+              language: 'EN',
+              createdBy: 'Art Kitthana',
+              status: 'Closed',
+            }
+          }
+        ];
+        await supabase.from('audit_logs').insert(initialVoiceReports);
       }
     } catch (e) {
       console.warn('Seed error (ignorable):', e);

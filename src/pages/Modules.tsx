@@ -96,7 +96,7 @@ export const CustomReport = () => <BaseModule title="Custom Report" icon={Settin
 
 // AI
 export const AIAssist = () => <BaseModule title="AI Assistant" icon={Bot} description="AI-powered insights and automation" />;
-export const VoiceReport = () => <BaseModule title="Voice Report" icon={Mic} description="Voice-to-text reporting and logging" />;
+export { VoiceReport } from './VoiceReport';
 
 // Admin
 export const UsersAdmin = () => <BaseModule title="User Management" icon={UserCog} description="Manage users, roles, and permissions" />;

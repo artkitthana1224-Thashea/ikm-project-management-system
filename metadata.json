@@ -1,6 +1,6 @@
 {
   "name": "IKM Project Management System",
   "description": "Enterprise-grade Mobile First Project Management System.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

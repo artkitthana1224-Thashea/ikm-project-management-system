@@ -1,11 +1,20 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
+import { GoogleGenAI } from '@google/genai';
 import { db } from './src/db/index.js';
 import { messages, chats, chatMembers, tasks, taskComments, taskAttachments } from './src/db/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
 import * as dotenv from 'dotenv';
 dotenv.config();
+
+let geminiClient: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI | null {
+  if (!geminiClient && process.env.GEMINI_API_KEY) {
+    geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return geminiClient;
+}
 
 // In-memory presence store initialized with defaults
 const userPresence: Record<string, { status: 'online' | 'busy' | 'away' | 'offline'; lastSeen: string }> = {
@@ -29,6 +38,72 @@ async function startServer() {
   // API Routes
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', sql: !!process.env.SQL_HOST });
+  });
+
+  // --- AI Voice Report Processing ---
+  app.post('/api/ai/process-voice-report', async (req, res) => {
+    try {
+      const { transcript, language = 'TH' } = req.body;
+      if (!transcript) {
+        return res.status(400).json({ error: 'Transcript is required' });
+      }
+
+      const ai = getGeminiClient();
+      if (ai) {
+        const prompt = `You are an AI Industrial Site Operations Assistant for IKM Engineering.
+Given this spoken transcript from a site engineer or technician on-site:
+"${transcript}"
+
+Analyze the spoken transcript and generate a structured JSON object with these exact keys:
+- "title": A concise, professional title for this report (max 8-10 words in ${language === 'TH' ? 'Thai' : 'English'})
+- "summary": A clear 2-3 sentence executive summary of the issue or inspection observation
+- "category": One of ["Safety & HSE", "Mechanical", "Electrical & SCADA", "Civil & Structural", "Inspection", "Emergency Maintenance", "Routine Observation"]
+- "priority": One of ["Low", "Medium", "High", "Critical"]
+- "equipmentId": Extracted or suggested equipment tag (e.g. "PUMP-02", "VALVE-104", "TURBINE-B", "TRANSFORMER-01", "HVAC-3", or "N/A")
+- "siteLocation": Extracted site area (e.g. "Zone B - Powerhouse", "Compressor Yard", "Offshore Module 4", "Substation", "Control Room")
+- "actionItems": An array of 2-4 concrete next action bullet points
+- "tags": An array of 3-5 short keywords (e.g. ["Vibration", "Bearing", "Urgent", "P-2026-018"])
+
+Respond ONLY with valid JSON (no markdown formatting, no code fences).`;
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+          }
+        });
+
+        const responseText = response.text || '';
+        try {
+          const parsed = JSON.parse(responseText);
+          return res.json({ success: true, report: parsed });
+        } catch (jsonErr) {
+          console.warn('JSON parse error from Gemini output:', jsonErr, responseText);
+        }
+      }
+
+      // Fallback heuristics if AI API key is not supplied or parse error
+      const isCritical = /urgent|critical|leak|fire|danger|ด่วน|อันตราย|รั่ว|ไฟ|ฉุกเฉิน/i.test(transcript);
+      const isHigh = /warning|check|abnormal|vibration|สั่น|ผิดปกติ|ตรวจสอบ/i.test(transcript);
+      
+      return res.json({
+        success: true,
+        report: {
+          title: transcript.slice(0, 50) + (transcript.length > 50 ? '...' : ''),
+          summary: transcript,
+          category: /electric|scada|ไฟ/i.test(transcript) ? 'Electrical & SCADA' : /valve|pipe|pump|ท่อ|ปั๊ม/i.test(transcript) ? 'Mechanical' : 'Safety & HSE',
+          priority: isCritical ? 'Critical' : isHigh ? 'High' : 'Medium',
+          equipmentId: 'EQ-SITE-01',
+          siteLocation: 'Zone B - Site Area',
+          actionItems: ['Review voice transcript log', 'Inspect physical equipment on-site', 'Update work order status in Supabase'],
+          tags: ['VoiceLog', 'FieldReport', 'SiteOperations'],
+        }
+      });
+    } catch (error) {
+      console.error('AI Voice processing error:', error);
+      res.status(500).json({ error: 'Failed to process voice report with AI' });
+    }
   });
 
   // --- Presence APIs ---

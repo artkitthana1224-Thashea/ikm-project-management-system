@@ -30,3 +30,23 @@ export interface WorkRequest {
   assignedTo?: string;
   progress: number;
 }
+
+export interface VoiceReport {
+  id: string;
+  title: string;
+  transcript: string;
+  summary: string;
+  category: 'Safety & HSE' | 'Mechanical' | 'Electrical & SCADA' | 'Civil & Structural' | 'Inspection' | 'Emergency Maintenance' | 'Routine Observation';
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  equipmentId?: string;
+  siteLocation?: string;
+  actionItems?: string[];
+  tags?: string[];
+  durationSeconds?: number;
+  language: 'TH' | 'EN';
+  createdAt: string;
+  createdBy: string;
+  createdById?: string;
+  followUpTaskId?: string;
+  status: 'Recorded' | 'Processed' | 'Actioned' | 'Closed';
+}
