@@ -19,10 +19,11 @@ const menuGroups = [
     ]
   },
   {
-    title: 'บุคลากร (Personnel)',
+    title: 'บุคลากร & กำลังพล (Personnel & Manpower)',
     items: [
+      { id: 'manpower', label: 'รายงาน Manpower\n(Job Report)', icon: FileText, color: 'from-ikm-orange to-ikm-orange-dark' },
       { id: 'employee-availability', label: 'สถานะพนักงาน\n(Availability)', icon: Users, color: 'from-indigo-400 to-indigo-600' },
-      { id: 'manpower', label: 'ไทม์ไลน์กำลังคน\n(Timeline)', icon: Clock, color: 'from-purple-400 to-purple-600' },
+      { id: 'manpower-timeline', label: 'ไทม์ไลน์กำลังคน\n(Timeline)', icon: Clock, color: 'from-purple-400 to-purple-600' },
     ]
   },
   {

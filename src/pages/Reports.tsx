@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Card } from '../components/ui/Card';
-import { FileText, Download, BarChart3, TrendingUp } from 'lucide-react';
+import { FileText, Download, BarChart3, TrendingUp, Users, ArrowRight, Building2, Layers } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from 'recharts';
 
 export function Reports() {
   const { language } = useStore();
+  const navigate = useNavigate();
 
   const monthly = [
     { m: "Apr", requests: 42, completed: 38, score: 84 },
@@ -41,21 +43,63 @@ export function Reports() {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 animate-in fade-in duration-300 space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-status-blue/10 text-status-blue flex items-center justify-center shadow-sm">
             <FileText className="w-6 h-6" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-ikm-text">{t.title}</h1>
-            <p className="text-sm text-ikm-text-secondary">Data visualization and exports</p>
+            <p className="text-sm text-ikm-text-secondary">Data visualization, Manpower Job matrix and exports</p>
           </div>
         </div>
-        <button className="h-10 px-4 rounded-lg bg-ikm-card border border-ikm-border text-ikm-text text-sm font-medium flex items-center gap-2 hover:bg-ikm-bg transition-colors shadow-sm">
-          <Download className="w-4 h-4 text-ikm-orange" />
-          {t.export}
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate('/manpower')}
+            className="h-10 px-4 rounded-lg bg-ikm-orange text-white text-sm font-bold flex items-center gap-2 hover:bg-ikm-orange-dark transition-all shadow-sm"
+          >
+            <Users className="w-4 h-4" />
+            <span>{language === 'TH' ? 'รายงาน Manpower ราย Job' : 'Manpower Job Report'}</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+          <button className="h-10 px-4 rounded-lg bg-ikm-card border border-ikm-border text-ikm-text text-sm font-medium flex items-center gap-2 hover:bg-ikm-bg transition-colors shadow-sm">
+            <Download className="w-4 h-4 text-ikm-orange" />
+            {t.export}
+          </button>
+        </div>
       </div>
+
+      {/* Feature Banner: Weekly Manpower Job Summary Report */}
+      <Card className="p-4 md:p-5 bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border-ikm-orange/30 hover:border-ikm-orange transition-all cursor-pointer group" onClick={() => navigate('/manpower')}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-xl bg-ikm-orange text-white flex items-center justify-center shadow-md flex-shrink-0 group-hover:scale-105 transition-transform">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-ikm-orange text-white uppercase tracking-wider">
+                  Official Template
+                </span>
+                <span className="text-xs text-ikm-text-secondary font-medium">IKM-TH RY & LKU Base</span>
+              </div>
+              <h2 className="text-lg font-bold text-ikm-text mt-0.5 group-hover:text-ikm-orange transition-colors">
+                {language === 'TH' ? 'รายงานสรุป Manpower ประจำสัปดาห์ของแต่ละ Job (IKM-TH RY & LKU)' : 'Weekly Manpower Summary Matrix by Job (Rayong & Laem Chabang)'}
+              </h2>
+              <p className="text-xs text-ikm-text-secondary mt-0.5">
+                {language === 'TH' 
+                  ? 'สรุปจำนวนคนทำงานตาม Job No., Office, Workshop, Leave, Off-duty พร้อมตาราง Spreadsheet และส่งออก CSV/LINE' 
+                  : 'Allocation matrix by project, workshop, office staff, leave and standby with CSV/LINE export'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            <span className="text-xs font-bold text-ikm-orange flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+              {language === 'TH' ? 'เปิดรายงานตาราง' : 'Open Matrix'} &rarr;
+            </span>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-4 md:p-6">

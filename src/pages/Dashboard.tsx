@@ -206,6 +206,33 @@ export function Dashboard() {
         <MetricTile title="Supabase Tasks" value={tasks.length.toString()} icon={AlertTriangle} accentColor="status-purple" />
       </div>
 
+      {/* Manpower Quick Banner */}
+      <div 
+        onClick={() => navigate('/manpower')} 
+        className="p-3.5 md:p-4 rounded-xl bg-gradient-to-r from-ikm-orange/10 via-amber-500/5 to-transparent border border-ikm-orange/30 hover:border-ikm-orange flex items-center justify-between cursor-pointer transition-all shadow-sm group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-ikm-orange text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-105 transition-transform">
+            76
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-ikm-orange/10 text-ikm-orange">
+                {language === 'TH' ? 'รายงานสด' : 'Live Report'}
+              </span>
+              <span className="text-xs font-semibold text-ikm-text-secondary">IKM-TH RY & LKU Base</span>
+            </div>
+            <h3 className="text-sm font-bold text-ikm-text group-hover:text-ikm-orange transition-colors">
+              {language === 'TH' ? 'สรุปรายงาน Manpower ประจำสัปดาห์ของแต่ละ Job (28 Aug - 3 Sep 2026)' : 'Weekly Manpower Allocation Matrix by Job (28 Aug - 3 Sep 2026)'}
+            </h3>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-xs font-bold text-ikm-orange">
+          <span>{language === 'TH' ? 'ดูตารางสรุป' : 'View Matrix'}</span>
+          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+
       {/* Main bento: 65/35 on desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.85fr_1fr] gap-5">
         

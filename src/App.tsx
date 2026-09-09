@@ -12,6 +12,7 @@ import { Kanban } from './pages/Kanban';
 import { MyDashboard } from './pages/MyDashboard';
 import { Availability } from './pages/Availability';
 import { ManpowerTimeline } from './pages/ManpowerTimeline';
+import { ManpowerReport } from './pages/ManpowerReport';
 import { TeamDashboard } from './pages/TeamDashboard';
 import { ProjectDashboard } from './pages/ProjectDashboard';
 import { Portfolio } from './pages/Portfolio';
@@ -93,7 +94,9 @@ export default function App() {
         {/* Ops & Personnel */}
         <Route path="/my-dashboard" element={<ProtectedRoute><MyDashboard /></ProtectedRoute>} />
         <Route path="/employee-availability" element={<ProtectedRoute><Availability /></ProtectedRoute>} />
-        <Route path="/manpower" element={<ProtectedRoute><ManpowerTimeline /></ProtectedRoute>} />
+        <Route path="/manpower" element={<ProtectedRoute><ManpowerReport /></ProtectedRoute>} />
+        <Route path="/manpower-report" element={<ProtectedRoute><ManpowerReport /></ProtectedRoute>} />
+        <Route path="/manpower-timeline" element={<ProtectedRoute><ManpowerTimeline /></ProtectedRoute>} />
         <Route path="/team-dashboard" element={<ProtectedRoute><TeamDashboard /></ProtectedRoute>} />
         
         {/* Projects */}

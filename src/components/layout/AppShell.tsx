@@ -273,16 +273,16 @@ const sidebarCategories = [
         icon: <Users />,
       },
       {
+        id: "manpower",
+        label: { EN: "Manpower Job Report", TH: "รายงาน Manpower ราย Job" },
+        path: "/manpower",
+        icon: <Activity />,
+      },
+      {
         id: "employee-availability",
         label: { EN: "Availability", TH: "สถานะว่างพนักงาน" },
         path: "/employee-availability",
         icon: <Clock />,
-      },
-      {
-        id: "manpower",
-        label: { EN: "Manpower Timeline", TH: "ไทม์ไลน์กำลังคน" },
-        path: "/manpower",
-        icon: <Activity />,
       },
     ],
   },
