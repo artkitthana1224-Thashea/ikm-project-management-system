@@ -1,16 +1,47 @@
 import * as React from "react"
 import { cn } from "@/src/lib/utils"
 
-export function Avatar({ src, fallback, className }: { src?: string, fallback: string, className?: string }) {
+export interface AvatarProps {
+  src?: string | null;
+  fallback: string;
+  className?: string;
+  backgroundColor?: string;
+  alt?: string;
+  onClick?: () => void;
+}
+
+export function Avatar({ src, fallback, className, backgroundColor, alt = "Avatar", onClick }: AvatarProps) {
+  const [imageError, setImageError] = React.useState(false);
+
+  React.useEffect(() => {
+    setImageError(false);
+  }, [src]);
+
+  const hasValidImage = src && src.trim().length > 0 && !imageError;
+
   return (
-    <div className={cn("relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-100", className)}>
-      {src ? (
-        <img src={src} className="aspect-square h-full w-full object-cover" alt="Avatar" />
+    <div
+      onClick={onClick}
+      style={!hasValidImage && backgroundColor ? { backgroundColor } : undefined}
+      className={cn(
+        "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full items-center justify-center font-bold text-white shadow-xs select-none",
+        !hasValidImage && !backgroundColor && "bg-gradient-to-tr from-ikm-orange to-amber-500",
+        onClick && "cursor-pointer hover:opacity-90 active:scale-95 transition-transform",
+        className
+      )}
+    >
+      {hasValidImage ? (
+        <img
+          src={src}
+          alt={alt}
+          onError={() => setImageError(true)}
+          className="aspect-square h-full w-full object-cover"
+        />
       ) : (
-        <div className="flex h-full w-full items-center justify-center font-medium text-gray-500">
-          {fallback}
-        </div>
+        <span className="text-xs uppercase font-bold tracking-wider">
+          {fallback || 'U'}
+        </span>
       )}
     </div>
-  )
+  );
 }

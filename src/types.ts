@@ -6,6 +6,9 @@ export interface User {
   role: string;
   avatar: string;
   department: string;
+  skills?: string[];
+  phone?: string;
+  email?: string;
 }
 
 export interface Task {

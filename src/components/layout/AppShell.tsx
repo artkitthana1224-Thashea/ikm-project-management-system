@@ -38,6 +38,7 @@ import {
   X,
 } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
+import { EditUserProfileModal } from "../ui/EditUserProfileModal";
 import { cn } from "@/src/lib/utils";
 
 export function Header() {
@@ -51,8 +52,11 @@ export function Header() {
     isSidebarCollapsed, 
     isSidebarAutoHide,
     toggleSidebarAutoHide,
-    setMobileMenuOpen 
+    setMobileMenuOpen
   } = useStore();
+
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [logoLoaded, setLogoLoaded] = useState(true);
 
   return (
     <header className="sticky top-0 z-40 flex h-14 md:h-16 w-full items-center justify-between border-b border-ikm-border bg-ikm-card px-3 md:px-6 shadow-sm">
@@ -91,9 +95,18 @@ export function Header() {
         </button>
 
         <div className="flex items-center gap-2 ml-1">
-          <div className="h-8 w-8 rounded bg-ikm-orange flex items-center justify-center text-white font-bold text-sm shadow-sm">
-            IKM
-          </div>
+          {logoLoaded ? (
+            <img 
+              src="/logo.png" 
+              alt="IKM Logo" 
+              onError={() => setLogoLoaded(false)}
+              className="h-8 max-h-8 w-auto object-contain" 
+            />
+          ) : (
+            <div className="h-8 w-8 rounded bg-ikm-orange flex items-center justify-center text-white font-bold text-sm shadow-sm">
+              IKM
+            </div>
+          )}
           <span className="hidden font-bold text-lg md:block text-ikm-text">
             Project Management
           </span>
@@ -126,26 +139,46 @@ export function Header() {
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-status-red border-2 border-ikm-card"></span>
         </button>
         {user && (
-          <div className="hidden md:flex items-center gap-2 ml-2 pl-3 border-l border-ikm-border">
+          <div 
+            onClick={() => setIsProfileModalOpen(true)}
+            className="hidden md:flex items-center gap-2 ml-2 pl-3 border-l border-ikm-border cursor-pointer hover:opacity-85 transition-opacity group"
+            title={language === 'TH' ? 'คลิกเพื่อแก้ไขข้อมูล ชื่อ ตำแหน่ง งาน แผนก หรือรูปโปรไฟล์' : 'Click to edit Name, Role, Skills, Department or Profile Photo'}
+          >
             <div className="text-right">
-              <div className="text-sm font-semibold text-ikm-text">{user.name}</div>
-              <div className="text-xs text-ikm-text-secondary">{user.role}</div>
+              <div className="text-sm font-semibold text-ikm-text group-hover:text-ikm-orange transition-colors">{user.name}</div>
+              <div className="text-xs text-ikm-text-secondary flex items-center justify-end gap-1">
+                <span>{user.role}</span>
+                <span className="text-[10px] px-1.5 py-0.2 bg-ikm-orange/15 text-ikm-orange rounded font-bold">{user.department}</span>
+              </div>
             </div>
             <Avatar
               fallback={user.name.charAt(0)}
               src={user.avatar}
-              className="h-9 w-9 ml-2"
+              className="h-9 w-9 ml-2 ring-2 ring-transparent group-hover:ring-ikm-orange transition-all"
             />
           </div>
         )}
         {user && (
-          <Avatar
-            fallback={user.name.charAt(0)}
-            src={user.avatar}
-            className="h-8 w-8 md:hidden ml-1"
-          />
+          <div 
+            onClick={() => setIsProfileModalOpen(true)}
+            className="md:hidden ml-1 cursor-pointer"
+            title={language === 'TH' ? 'คลิกเพื่อแก้ไขข้อมูล ชื่อ ตำแหน่ง งาน แผนก หรือรูปโปรไฟล์' : 'Click to edit Name, Role, Skills, Department or Profile Photo'}
+          >
+            <Avatar
+              fallback={user.name.charAt(0)}
+              src={user.avatar}
+              className="h-8 w-8"
+            />
+          </div>
         )}
       </div>
+
+      {user && (
+        <EditUserProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+        />
+      )}
     </header>
   );
 }

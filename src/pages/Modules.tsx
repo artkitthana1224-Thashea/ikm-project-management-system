@@ -99,6 +99,6 @@ export const AIAssist = () => <BaseModule title="AI Assistant" icon={Bot} descri
 export { VoiceReport } from './VoiceReport';
 
 // Admin
-export const UsersAdmin = () => <BaseModule title="User Management" icon={UserCog} description="Manage users, roles, and permissions" />;
+export { UsersAdmin } from './UsersAdmin';
 export const AuditLog = () => <BaseModule title="Audit Log" icon={ScrollText} description="System-wide activity logging" />;
 export const Security = () => <BaseModule title="Security" icon={ShieldCheck} description="Security policies and access control" />;
