@@ -28,6 +28,7 @@ import {
   UserCog,
   ScrollText,
   KanbanSquare,
+  BookOpen,
   PanelLeftClose,
   PanelLeft,
   ChevronLeft,
@@ -345,7 +346,7 @@ const sidebarCategories = [
     ],
   },
   {
-    title: { EN: "Admin", TH: "ผู้ดูแลระบบ" },
+    title: { EN: "Admin & Manual", TH: "ผู้ดูแลระบบ & คู่มือ" },
     items: [
       {
         id: "users",
@@ -358,6 +359,12 @@ const sidebarCategories = [
         label: { EN: "Audit Log", TH: "บันทึกการตรวจสอบ" },
         path: "/audit-log",
         icon: <ScrollText />,
+      },
+      {
+        id: "manual",
+        label: { EN: "User Manual (Booklet)", TH: "คู่มือการใช้งาน (รูปเล่ม)" },
+        path: "/manual",
+        icon: <BookOpen />,
       },
     ],
   },

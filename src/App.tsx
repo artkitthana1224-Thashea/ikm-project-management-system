@@ -25,6 +25,7 @@ import { Reports } from './pages/Reports';
 import { UsersAdmin } from './pages/UsersAdmin';
 import { AuditLog } from './pages/AuditLog';
 import { CalendarView } from './pages/CalendarView';
+import { UserManual } from './pages/UserManual';
 import { 
   ProjList, ProjCalendar, TaskMgmt, ProjBoard, SubProject,
   PhotoReport, CustomReport, AIAssist, VoiceReport, Security
@@ -122,12 +123,15 @@ export default function App() {
         <Route path="/photo-report" element={<ProtectedRoute><PhotoReport /></ProtectedRoute>} />
         <Route path="/custom-report" element={<ProtectedRoute><CustomReport /></ProtectedRoute>} />
         
-        {/* AI & Admin */}
+        {/* AI & Admin & Manual */}
         <Route path="/ai-assist" element={<ProtectedRoute><AIAssist /></ProtectedRoute>} />
         <Route path="/ai-voice" element={<ProtectedRoute><VoiceReport /></ProtectedRoute>} />
+        <Route path="/voice-report" element={<ProtectedRoute><VoiceReport /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute><UsersAdmin /></ProtectedRoute>} />
         <Route path="/audit-log" element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
         <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
+        <Route path="/manual" element={<ProtectedRoute><UserManual /></ProtectedRoute>} />
+        <Route path="/user-manual" element={<ProtectedRoute><UserManual /></ProtectedRoute>} />
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

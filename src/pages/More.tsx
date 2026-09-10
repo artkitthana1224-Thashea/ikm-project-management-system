@@ -5,7 +5,8 @@ import {
   Users, Clock, PieChart, Briefcase, UsersRound, ListTodo, 
   CalendarDays, Layers, KanbanSquare, Network, Calendar, 
   BarChartHorizontal, Activity, CheckCircle, Star, ClipboardCheck, 
-  FileText, Image as ImageIcon, Settings2, Bot, Mic, UserCog, ScrollText, ShieldCheck
+  FileText, Image as ImageIcon, Settings2, Bot, Mic, UserCog, ScrollText, ShieldCheck,
+  BookOpen
 } from 'lucide-react';
 
 const menuGroups = [
@@ -72,11 +73,12 @@ const menuGroups = [
     ]
   },
   {
-    title: 'ผู้ดูแลระบบ (Admin)',
+    title: 'ผู้ดูแลระบบ & คู่มือ (Admin & User Manual)',
     items: [
       { id: 'users', label: 'จัดการผู้ใช้\n(Users)', icon: UserCog, color: 'from-slate-500 to-slate-700' },
       { id: 'audit-log', label: 'บันทึกตรวจสอบ\n(Audit Log)', icon: ScrollText, color: 'from-gray-500 to-gray-700' },
       { id: 'security', label: 'ความปลอดภัย\n(Security)', icon: ShieldCheck, color: 'from-red-500 to-red-700' },
+      { id: 'manual', label: 'คู่มือรูปเล่ม\n(User Manual)', icon: BookOpen, color: 'from-ikm-orange to-ikm-orange-dark' },
     ]
   }
 ];
