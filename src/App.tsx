@@ -23,6 +23,7 @@ import { PerformanceScore } from './pages/PerformanceScore';
 import { ScoreAudit } from './pages/ScoreAudit';
 import { Reports } from './pages/Reports';
 import { UsersAdmin } from './pages/UsersAdmin';
+import { EquipmentList } from './pages/EquipmentList';
 import { AuditLog } from './pages/AuditLog';
 import { CalendarView } from './pages/CalendarView';
 import { UserManual } from './pages/UserManual';
@@ -128,6 +129,8 @@ export default function App() {
         <Route path="/ai-voice" element={<ProtectedRoute><VoiceReport /></ProtectedRoute>} />
         <Route path="/voice-report" element={<ProtectedRoute><VoiceReport /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute><UsersAdmin /></ProtectedRoute>} />
+        <Route path="/equipment" element={<ProtectedRoute><EquipmentList /></ProtectedRoute>} />
+        <Route path="/equipment-list" element={<ProtectedRoute><EquipmentList /></ProtectedRoute>} />
         <Route path="/audit-log" element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
         <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
         <Route path="/manual" element={<ProtectedRoute><UserManual /></ProtectedRoute>} />

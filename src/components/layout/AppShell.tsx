@@ -37,9 +37,13 @@ import {
   PinOff,
   Zap,
   X,
+  Wrench,
+  UserCheck,
+  LogOut,
 } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { EditUserProfileModal } from "../ui/EditUserProfileModal";
+import { LogoutConfirmModal } from "../ui/LogoutConfirmModal";
 import { cn } from "@/src/lib/utils";
 
 export function Header() {
@@ -53,10 +57,12 @@ export function Header() {
     isSidebarCollapsed, 
     isSidebarAutoHide,
     toggleSidebarAutoHide,
-    setMobileMenuOpen
+    setMobileMenuOpen,
+    switchRole
   } = useStore();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [logoLoaded, setLogoLoaded] = useState(true);
 
   return (
@@ -114,7 +120,28 @@ export function Header() {
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 md:gap-4">
+      <div className="flex items-center gap-1.5 md:gap-3">
+        {/* Quick RBAC Role Switcher */}
+        {user && (
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900/60 text-xs">
+            <span className="font-semibold text-orange-900 dark:text-orange-300 text-[11px] whitespace-nowrap">Role:</span>
+            <select
+              value={user.userLevel || user.role}
+              onChange={(e) => switchRole(e.target.value as any)}
+              className="bg-transparent font-bold text-ikm-orange text-xs focus:outline-none cursor-pointer pr-1"
+              title="สลับบทบาทสิทธิ์ (Role-Based Access Control) เพื่อทดสอบฟังก์ชัน"
+            >
+              <option value="Admin" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Admin</option>
+              <option value="Country Manager" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Country Manager</option>
+              <option value="Manager" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Manager</option>
+              <option value="Coordinator" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Coordinator</option>
+              <option value="Supervisor" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Supervisor</option>
+              <option value="Technician" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Technician</option>
+              <option value="Requester" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Requester</option>
+            </select>
+          </div>
+        )}
+
         <button
           onClick={() => setLanguage(language === "EN" ? "TH" : "EN")}
           className="flex items-center gap-1 px-2.5 py-1.5 text-ikm-text-secondary hover:bg-ikm-bg rounded-lg transition-colors text-xs font-semibold border border-ikm-border"
@@ -172,6 +199,18 @@ export function Header() {
             />
           </div>
         )}
+
+        {/* Header Logout Button */}
+        {user && (
+          <button
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 dark:bg-red-950/40 dark:hover:bg-red-600 border border-red-200 dark:border-red-900/60 rounded-lg transition-all shadow-xs group ml-1"
+            title={language === 'TH' ? 'ออกจากระบบ (Logout)' : 'Sign Out / Logout'}
+          >
+            <LogOut className="h-3.5 w-3.5 text-red-500 group-hover:text-white transition-colors" />
+            <span className="hidden sm:inline">{language === 'TH' ? 'ออกจากระบบ' : 'Logout'}</span>
+          </button>
+        )}
       </div>
 
       {user && (
@@ -180,6 +219,11 @@ export function Header() {
           onClose={() => setIsProfileModalOpen(false)}
         />
       )}
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+      />
     </header>
   );
 }
@@ -278,6 +322,12 @@ const sidebarCategories = [
         label: { EN: "Manpower Job Report", TH: "รายงาน Manpower ราย Job" },
         path: "/manpower",
         icon: <Activity />,
+      },
+      {
+        id: "equipment",
+        label: { EN: "Equipment & Tools", TH: "เครื่องมือและอุปกรณ์หลัก" },
+        path: "/equipment",
+        icon: <Wrench />,
       },
       {
         id: "employee-availability",
@@ -406,76 +456,110 @@ export function MobileNav() {
 }
 
 export function MobileDrawer() {
-  const { isMobileMenuOpen, setMobileMenuOpen, activeTab, language } = useStore();
+  const { isMobileMenuOpen, setMobileMenuOpen, activeTab, language, user } = useStore();
   const navigate = useNavigate();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   if (!isMobileMenuOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 md:hidden animate-in fade-in duration-200">
-      <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs" 
-        onClick={() => setMobileMenuOpen(false)} 
-      />
-      <div className="fixed inset-y-0 left-0 w-72 max-w-[80vw] bg-ikm-card border-r border-ikm-border shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200">
-        <div className="p-4 border-b border-ikm-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded bg-ikm-orange flex items-center justify-center text-white font-bold text-xs">
-              IKM
-            </div>
-            <span className="font-bold text-sm text-ikm-text">
-              Project Management
-            </span>
-          </div>
-          <button 
-            onClick={() => setMobileMenuOpen(false)}
-            className="p-1.5 text-ikm-text-secondary hover:text-ikm-text rounded-lg hover:bg-ikm-bg"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  const isTH = language === 'TH';
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {sidebarCategories.map((category, idx) => (
-            <div key={idx}>
-              <div className="text-[11px] font-bold text-ikm-text-secondary uppercase tracking-wider mb-2 px-2">
-                {category.title[language as "EN" | "TH"]}
+  return (
+    <>
+      <div className="fixed inset-0 z-50 md:hidden animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs" 
+          onClick={() => setMobileMenuOpen(false)} 
+        />
+        <div className="fixed inset-y-0 left-0 w-72 max-w-[80vw] bg-ikm-card border-r border-ikm-border shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200">
+          <div className="p-4 border-b border-ikm-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded bg-ikm-orange flex items-center justify-center text-white font-bold text-xs">
+                IKM
               </div>
-              <nav className="space-y-1">
-                {category.items.map((item) => {
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        navigate(item.path);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-ikm-orange-light text-ikm-orange-dark font-semibold"
-                          : "text-ikm-text-secondary hover:bg-ikm-bg hover:text-ikm-text",
-                      )}
-                    >
-                      {React.cloneElement(item.icon, { className: "h-4 w-4 shrink-0" })}
-                      <span className="truncate">
-                        {item.label[language as "EN" | "TH"]}
-                      </span>
-                      {item.badge && (
-                        <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-status-red px-1.5 text-[10px] font-bold text-white">
-                          {item.badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </nav>
+              <span className="font-bold text-sm text-ikm-text">
+                Project Management
+              </span>
             </div>
-          ))}
+            <button 
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-1.5 text-ikm-text-secondary hover:text-ikm-text rounded-lg hover:bg-ikm-bg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            {sidebarCategories.map((category, idx) => (
+              <div key={idx}>
+                <div className="text-[11px] font-bold text-ikm-text-secondary uppercase tracking-wider mb-2 px-2">
+                  {category.title[language as "EN" | "TH"]}
+                </div>
+                <nav className="space-y-1">
+                  {category.items.map((item) => {
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          navigate(item.path);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-ikm-orange-light text-ikm-orange-dark font-semibold"
+                            : "text-ikm-text-secondary hover:bg-ikm-bg hover:text-ikm-text",
+                        )}
+                      >
+                        {React.cloneElement(item.icon, { className: "h-4 w-4 shrink-0" })}
+                        <span className="truncate">
+                          {item.label[language as "EN" | "TH"]}
+                        </span>
+                        {item.badge && (
+                          <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-status-red px-1.5 text-[10px] font-bold text-white">
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+            ))}
+          </div>
+
+          {/* Drawer Footer with User & Logout */}
+          {user && (
+            <div className="p-3 border-t border-ikm-border bg-ikm-bg/60 space-y-2">
+              <div className="flex items-center gap-2.5 px-2 py-1">
+                <Avatar
+                  fallback={user.name.charAt(0)}
+                  src={user.avatar}
+                  className="h-8 w-8 shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold text-ikm-text truncate">{user.name}</div>
+                  <div className="text-[10px] text-ikm-text-secondary truncate">{user.role}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 active:scale-98 transition-all shadow-sm"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{isTH ? 'ออกจากระบบ (Logout)' : 'Sign Out'}</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+      />
+    </>
   );
 }
 
@@ -492,6 +576,7 @@ export function Sidebar() {
   } = useStore();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Automatically collapse / hide sidebar when screen width drops below 'lg' (1024px)
   React.useEffect(() => {
@@ -658,8 +743,28 @@ export function Sidebar() {
               )}
             </button>
           )}
+
+          {/* Sidebar Logout Button */}
+          <button
+            onClick={() => setIsLogoutModalOpen(true)}
+            className={cn(
+              "flex items-center rounded-lg py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors w-full mt-1 border-t border-ikm-border/60 pt-2",
+              !isExpanded ? "justify-center px-0" : "gap-2 px-3"
+            )}
+            title={language === 'TH' ? "ออกจากระบบ (Logout)" : "Sign Out / Logout"}
+          >
+            <LogOut className="h-4 w-4 shrink-0 text-red-500" />
+            {isExpanded && (
+              <span>{language === 'TH' ? "ออกจากระบบ (Logout)" : "Sign Out"}</span>
+            )}
+          </button>
         </div>
       </aside>
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+      />
     </>
   );
 }

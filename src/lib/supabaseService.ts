@@ -1,20 +1,8 @@
 import { supabase } from './supabase';
-import { User, Task, WorkRequest, TaskStatus, VoiceReport } from '../types';
+import { User, Task, WorkRequest, TaskStatus, VoiceReport, Employee } from '../types';
 
-export interface Employee {
-  id: string;
-  name: string;
-  role: string;
-  department: string;
-  avatarColor: string;
-  avatarUrl?: string;
-  availability: 'available' | 'busy' | 'on-leave' | 'off-shift';
-  utilization: number;
-  score: number;
-  skills: string[];
-  phone?: string;
-  email?: string;
-}
+export type { Employee };
+
 
 export interface SupabaseTaskRow {
   id: string;
@@ -219,36 +207,66 @@ let activeVoiceChannel: ReturnType<typeof supabase.channel> | null = null;
 
 // --- API Service Methods ---
 export const SupabaseService = {
-  // Current User Profile from Supabase
+  // Current User Profile from Supabase (Row-by-Row from public.user_profiles)
   async getCurrentUserProfile(userId?: string): Promise<User | null> {
     try {
-      const { data: profiles, error: pError } = await supabase
+      let profiles: any[] | null = null;
+      
+      const joinRes = await supabase
         .from('user_profiles')
-        .select('user_id, full_name, avatar_url, phone, metadata, department:departments(name)');
+        .select('user_id, full_name, avatar_url, department_id, phone, metadata, department:departments(name)');
+      
+      if (!joinRes.error && joinRes.data && joinRes.data.length > 0) {
+        profiles = joinRes.data;
+      } else {
+        const directRes = await supabase
+          .from('user_profiles')
+          .select('user_id, full_name, avatar_url, department_id, phone, metadata');
+        profiles = directRes.data;
+      }
 
-      if (pError || !profiles || profiles.length === 0) {
+      if (!profiles || profiles.length === 0) {
         return null;
       }
 
       const p = (userId ? profiles.find(item => item.user_id === userId) : null) || profiles[0];
+      if (!p) {
+        return null;
+      }
+      
       const meta = p.metadata || {};
 
-      let skills: string[] = ['Leadership', 'SCADA', 'Turbine Overhaul', 'Field Inspection'];
+      let skills: string[] = ['Operations'];
       if (Array.isArray(meta.skills)) {
         skills = meta.skills;
       } else if (typeof meta.skills === 'string') {
         skills = meta.skills.split(',').map((s: string) => s.trim()).filter(Boolean);
       }
 
+      const realFullName = p.full_name && p.full_name.trim() !== '' ? p.full_name.trim() : (meta.name || 'User');
+      const roleStr = meta.role || meta.job_title || 'Site Engineer';
+      const userLevelStr = meta.userLevel || (
+        roleStr.toLowerCase().includes('admin') ? 'Admin' :
+        roleStr.toLowerCase().includes('country') ? 'Country Manager' :
+        roleStr.toLowerCase().includes('manager') ? 'Manager' :
+        roleStr.toLowerCase().includes('coord') ? 'Coordinator' :
+        roleStr.toLowerCase().includes('lead') || roleStr.toLowerCase().includes('super') ? 'Supervisor' :
+        roleStr.toLowerCase().includes('request') ? 'Requester' : 'Technician'
+      );
+
       return {
         id: p.user_id,
-        name: p.full_name || 'Somchai Suksan',
-        role: meta.role || 'Site Manager',
-        department: (p as any).department?.name || meta.department || 'Engineering',
+        name: realFullName, // Real full_name directly from database!
+        username: meta.username || (p.full_name ? p.full_name.toLowerCase().replace(/\s+/g, '.') : p.user_id.slice(0, 8)),
+        role: roleStr,
+        userLevel: userLevelStr,
+        department: (p as any).department?.name || meta.department || 'Operations',
         avatar: p.avatar_url || meta.avatarUrl || '',
         skills: skills,
-        phone: p.phone || meta.phone || '081-998-8776',
-        email: meta.email || 'somchai.s@ikm-ops.com',
+        phone: p.phone || meta.phone || '',
+        email: meta.email || '',
+        baseLocation: meta.baseLocation || 'IKM Rayong (RY)',
+        bio: meta.bio || '',
       };
     } catch (e) {
       console.error('getCurrentUserProfile exception:', e);
@@ -259,77 +277,50 @@ export const SupabaseService = {
   // Save / Update User Profile directly to Supabase
   async saveUserProfile(user: Partial<User> & { id?: string }): Promise<boolean> {
     try {
-      const { data: profiles } = await supabase.from('user_profiles').select('*');
+      if (!user.id) return false;
 
-      if (profiles && profiles.length > 0) {
-        const target = (user.id ? profiles.find(p => p.user_id === user.id) : null) || profiles[0];
-        const currentMeta = target.metadata || {};
+      const { data: existing } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-        let updatedRoster: Employee[] = Array.isArray(currentMeta.employee_roster) ? [...currentMeta.employee_roster] : [];
-        if (updatedRoster.length > 0) {
-          updatedRoster = updatedRoster.map((emp: Employee) => {
-            if (emp.id === target.user_id || (user.id && emp.id === user.id) || (user.name && emp.name === user.name) || emp.name === target.full_name) {
-              return {
-                ...emp,
-                name: user.name !== undefined ? user.name : emp.name,
-                role: user.role !== undefined ? user.role : emp.role,
-                department: user.department !== undefined ? user.department : emp.department,
-                avatarUrl: user.avatar !== undefined ? (user.avatar || undefined) : emp.avatarUrl,
-                skills: user.skills !== undefined ? user.skills : emp.skills,
-                phone: user.phone !== undefined ? user.phone : emp.phone,
-                email: user.email !== undefined ? user.email : emp.email,
-              };
-            }
-            return emp;
-          });
-        }
+      const currentMeta = existing?.metadata || {};
+      const newMeta = {
+        ...currentMeta,
+        ...(user.role !== undefined ? { role: user.role } : {}),
+        ...(user.userLevel !== undefined ? { userLevel: user.userLevel } : {}),
+        ...(user.department !== undefined ? { department: user.department } : {}),
+        ...(user.skills !== undefined ? { skills: user.skills } : {}),
+        ...(user.email !== undefined ? { email: user.email } : {}),
+        ...(user.phone !== undefined ? { phone: user.phone } : {}),
+        ...(user.avatar !== undefined ? { avatarUrl: user.avatar } : {}),
+        ...(user.username !== undefined ? { username: user.username } : {}),
+      };
 
-        const newMeta = {
-          ...currentMeta,
-          role: user.role !== undefined ? user.role : (currentMeta.role || 'Site Manager'),
-          department: user.department !== undefined ? user.department : (currentMeta.department || 'Engineering'),
-          skills: user.skills !== undefined ? user.skills : (currentMeta.skills || []),
-          email: user.email !== undefined ? user.email : (currentMeta.email || 'somchai.s@ikm-ops.com'),
-          phone: user.phone !== undefined ? user.phone : (currentMeta.phone || target.phone),
-          avatarUrl: user.avatar !== undefined ? user.avatar : (target.avatar_url || currentMeta.avatarUrl),
-          employee_roster: updatedRoster,
-        };
+      const updatePayload: any = {
+        metadata: newMeta,
+      };
+      if (user.name !== undefined) updatePayload.full_name = user.name;
+      if (user.avatar !== undefined) updatePayload.avatar_url = user.avatar || null;
+      if (user.phone !== undefined) updatePayload.phone = user.phone;
 
-        const updatePayload: any = {
-          metadata: newMeta,
-        };
-        if (user.name !== undefined) updatePayload.full_name = user.name;
-        if (user.avatar !== undefined) updatePayload.avatar_url = user.avatar || null;
-        if (user.phone !== undefined) updatePayload.phone = user.phone;
-
+      if (existing) {
         const { error } = await supabase
           .from('user_profiles')
           .update(updatePayload)
-          .eq('user_id', target.user_id);
-
-        if (error) {
-          console.error('Supabase saveUserProfile error:', error);
-          return false;
-        }
-        return true;
+          .eq('user_id', user.id);
+        return !error;
       } else {
-        // Table was empty, insert new persistent user profile
-        const uid = user.id && isUuid(user.id) ? user.id : '46de6855-477a-4a99-bb4c-7e627500fafa';
-        const meta = {
-          role: user.role || 'Site Manager',
-          department: user.department || 'Engineering',
-          skills: user.skills || ['Leadership', 'Operations', 'Inspection'],
-          email: user.email || 'somchai.s@ikm-ops.com',
-          phone: user.phone || '081-998-8776',
-          avatarUrl: user.avatar || '',
-        };
-        const { error } = await supabase.from('user_profiles').insert({
-          user_id: uid,
-          full_name: user.name || 'Somchai Suksan',
-          avatar_url: user.avatar || null,
-          phone: user.phone || '081-998-8776',
-          metadata: meta,
-        });
+        const { error } = await supabase
+          .from('user_profiles')
+          .insert({
+            user_id: user.id,
+            full_name: user.name || 'User',
+            avatar_url: user.avatar || null,
+            phone: user.phone || null,
+            metadata: newMeta,
+          });
         return !error;
       }
     } catch (e) {
@@ -338,58 +329,82 @@ export const SupabaseService = {
     }
   },
 
-  // Employees & User Profiles from Supabase
+  // Employees & User Profiles from Supabase (Row-by-Row from public.user_profiles table)
   async getEmployees(): Promise<Employee[]> {
     try {
-      const { data: profiles, error: pError } = await supabase
+      let profiles: any[] | null = null;
+      let pError: any = null;
+
+      // Try selecting with department join
+      const joinRes = await supabase
         .from('user_profiles')
-        .select('user_id, full_name, avatar_url, phone, metadata, department:departments(name)');
+        .select('user_id, full_name, avatar_url, department_id, phone, metadata, department:departments(name)');
+
+      if (!joinRes.error && joinRes.data) {
+        profiles = joinRes.data;
+      } else {
+        // Fallback if join syntax is not available
+        const directRes = await supabase
+          .from('user_profiles')
+          .select('user_id, full_name, avatar_url, department_id, phone, metadata');
+        profiles = directRes.data;
+        pError = directRes.error;
+      }
 
       if (pError) {
         console.error('Supabase fetch user_profiles error:', pError);
         return [];
       }
 
-      const employeesList: Employee[] = [];
-      const seenIds = new Set<string>();
-
-      if (profiles && profiles.length > 0) {
-        profiles.forEach((p) => {
-          // If profile contains the full roster in metadata
-          if (p.metadata && Array.isArray(p.metadata.employee_roster)) {
-            p.metadata.employee_roster.forEach((emp: Employee) => {
-              if (!seenIds.has(emp.id)) {
-                seenIds.add(emp.id);
-                employeesList.push(emp);
-              }
-            });
-          }
-
-          // Also add this specific profile if not already included
-          if (!seenIds.has(p.user_id)) {
-            seenIds.add(p.user_id);
-            const meta = p.metadata || {};
-            let skills: string[] = ['Leadership', 'Operations'];
-            if (Array.isArray(meta.skills)) skills = meta.skills;
-            else if (typeof meta.skills === 'string') skills = meta.skills.split(',').map((s: string) => s.trim()).filter(Boolean);
-
-            employeesList.push({
-              id: p.user_id,
-              name: p.full_name || 'Staff Member',
-              role: meta.role || 'Site Manager',
-              department: (p as any).department?.name || meta.department || 'Engineering',
-              avatarColor: meta.avatarColor || '#F58220',
-              avatarUrl: p.avatar_url || meta.avatarUrl || undefined,
-              availability: meta.availability || 'available',
-              utilization: meta.utilization || 80,
-              score: meta.score || 95,
-              skills: skills,
-              phone: p.phone || meta.phone || '081-998-8776',
-              email: meta.email || 'staff@ikm-ops.com',
-            });
-          }
-        });
+      if (!profiles || profiles.length === 0) {
+        return [];
       }
+
+      // Map EVERY single row in public.user_profiles directly to an Employee object
+      const employeesList: Employee[] = profiles.map((p) => {
+        const meta = p.metadata || {};
+        let skills: string[] = ['Operations'];
+        if (Array.isArray(meta.skills)) {
+          skills = meta.skills;
+        } else if (typeof meta.skills === 'string') {
+          skills = meta.skills.split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+
+        const realFullName = p.full_name && p.full_name.trim() !== '' ? p.full_name.trim() : (meta.name || 'Unnamed User');
+        const roleStr = meta.role || meta.job_title || 'Staff';
+        const userLevelStr = meta.userLevel || (
+          roleStr.toLowerCase().includes('admin') ? 'Admin' :
+          roleStr.toLowerCase().includes('country') ? 'Country Manager' :
+          roleStr.toLowerCase().includes('manager') ? 'Manager' :
+          roleStr.toLowerCase().includes('coord') ? 'Coordinator' :
+          roleStr.toLowerCase().includes('lead') || roleStr.toLowerCase().includes('super') ? 'Supervisor' :
+          roleStr.toLowerCase().includes('request') ? 'Requester' : 'Technician'
+        );
+
+        return {
+          id: p.user_id,
+          name: realFullName, // STRICTLY REAL full_name from database table!
+          username: meta.username || (p.full_name ? p.full_name.toLowerCase().replace(/\s+/g, '.') : p.user_id.slice(0, 8)),
+          role: roleStr,
+          userLevel: userLevelStr,
+          department: (p as any).department?.name || meta.department || 'Operations',
+          departmentId: p.department_id || undefined,
+          avatarColor: meta.avatarColor || '#F58220',
+          avatarUrl: p.avatar_url || meta.avatarUrl || undefined,
+          availability: meta.availability || 'available',
+          utilization: typeof meta.utilization === 'number' ? meta.utilization : 80,
+          score: typeof meta.score === 'number' ? meta.score : 95,
+          skills: skills,
+          phone: p.phone || meta.phone || '',
+          email: meta.email || '',
+          baseLocation: meta.baseLocation || 'IKM Rayong (RY)',
+          bio: meta.bio || '',
+          isArchived: Boolean(meta.isArchived),
+          certificates: Array.isArray(meta.certificates) ? meta.certificates : [],
+          education: Array.isArray(meta.education) ? meta.education : [],
+          experiences: Array.isArray(meta.experiences) ? meta.experiences : [],
+        };
+      });
 
       return employeesList;
     } catch (e) {
@@ -400,75 +415,83 @@ export const SupabaseService = {
 
   async updateEmployee(id: string, updates: Partial<Employee>): Promise<boolean> {
     try {
-      const { data: profiles } = await supabase.from('user_profiles').select('*');
-      if (profiles && profiles.length > 0) {
-        const primary = (profiles.find(p => p.user_id === id)) || profiles[0];
-        let currentRoster: Employee[] = primary.metadata?.employee_roster || [];
-        
-        currentRoster = currentRoster.map(e => (e.id === id || (updates.name && e.name === updates.name)) ? { ...e, ...updates } : e);
-        
-        const metadataUpdate: any = {
-          ...primary.metadata,
-          employee_roster: currentRoster,
-        };
+      const { data: existing } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', id)
+        .maybeSingle();
 
-        let fullName = primary.full_name;
-        let avatarUrl = primary.avatar_url;
-        if (id === primary.user_id || primary.full_name === updates.name) {
-          if (updates.name) fullName = updates.name;
-          if (updates.avatarUrl !== undefined) avatarUrl = updates.avatarUrl || null;
-          if (updates.role) metadataUpdate.role = updates.role;
-          if (updates.department) metadataUpdate.department = updates.department;
-          if (updates.availability) metadataUpdate.availability = updates.availability;
-          if (updates.score) metadataUpdate.score = updates.score;
-          if (updates.skills) metadataUpdate.skills = updates.skills;
-          if (updates.email) metadataUpdate.email = updates.email;
-          if (updates.phone) metadataUpdate.phone = updates.phone;
-        }
+      const currentMeta = existing?.metadata || {};
+      const newMeta = {
+        ...currentMeta,
+        ...(updates.role !== undefined ? { role: updates.role } : {}),
+        ...(updates.userLevel !== undefined ? { userLevel: updates.userLevel } : {}),
+        ...(updates.department !== undefined ? { department: updates.department } : {}),
+        ...(updates.availability !== undefined ? { availability: updates.availability } : {}),
+        ...(updates.utilization !== undefined ? { utilization: updates.utilization } : {}),
+        ...(updates.score !== undefined ? { score: updates.score } : {}),
+        ...(updates.skills !== undefined ? { skills: updates.skills } : {}),
+        ...(updates.email !== undefined ? { email: updates.email } : {}),
+        ...(updates.phone !== undefined ? { phone: updates.phone } : {}),
+        ...(updates.avatarUrl !== undefined ? { avatarUrl: updates.avatarUrl } : {}),
+        ...(updates.baseLocation !== undefined ? { baseLocation: updates.baseLocation } : {}),
+        ...(updates.bio !== undefined ? { bio: updates.bio } : {}),
+        ...(updates.certificates !== undefined ? { certificates: updates.certificates } : {}),
+        ...(updates.education !== undefined ? { education: updates.education } : {}),
+        ...(updates.experiences !== undefined ? { experiences: updates.experiences } : {}),
+        ...(updates.isArchived !== undefined ? { isArchived: updates.isArchived } : {}),
+      };
 
+      const updatePayload: any = {
+        metadata: newMeta,
+      };
+      if (updates.name !== undefined) updatePayload.full_name = updates.name;
+      if (updates.avatarUrl !== undefined) updatePayload.avatar_url = updates.avatarUrl || null;
+      if (updates.phone !== undefined) updatePayload.phone = updates.phone;
+      if (updates.departmentId !== undefined) updatePayload.department_id = updates.departmentId;
+
+      if (existing) {
         const { error } = await supabase
           .from('user_profiles')
-          .update({
-            full_name: fullName,
-            avatar_url: avatarUrl,
-            phone: updates.phone || primary.phone,
-            metadata: metadataUpdate,
-          })
-          .eq('user_id', primary.user_id);
-
+          .update(updatePayload)
+          .eq('user_id', id);
+        return !error;
+      } else {
+        const uid = isUuid(id) ? id : crypto.randomUUID();
+        const { error } = await supabase
+          .from('user_profiles')
+          .insert({
+            user_id: uid,
+            full_name: updates.name || 'Staff Member',
+            avatar_url: updates.avatarUrl || null,
+            phone: updates.phone || null,
+            department_id: updates.departmentId || null,
+            metadata: newMeta,
+          });
         return !error;
       }
-      return false;
     } catch (e) {
       console.error('updateEmployee error:', e);
       return false;
     }
   },
 
-  async deleteEmployee(id: string): Promise<boolean> {
+  async deleteEmployee(id: string, hardDelete: boolean = false): Promise<boolean> {
     try {
-      const { data: profiles } = await supabase.from('user_profiles').select('*');
-      if (profiles && profiles.length > 0) {
-        const primary = profiles[0];
-        let currentRoster: Employee[] = primary.metadata?.employee_roster || [];
-        
-        currentRoster = currentRoster.filter(e => e.id !== id);
-        
-        const metadataUpdate: any = {
-          ...primary.metadata,
-          employee_roster: currentRoster,
-        };
-
+      if (hardDelete) {
+        const { error } = await supabase.from('user_profiles').delete().eq('user_id', id);
+        return !error;
+      } else {
+        const { data: existing } = await supabase.from('user_profiles').select('metadata').eq('user_id', id).maybeSingle();
+        const currentMeta = existing?.metadata || {};
         const { error } = await supabase
           .from('user_profiles')
           .update({
-            metadata: metadataUpdate,
+            metadata: { ...currentMeta, isArchived: true }
           })
-          .eq('user_id', primary.user_id);
-
+          .eq('user_id', id);
         return !error;
       }
-      return false;
     } catch (e) {
       console.error('deleteEmployee error:', e);
       return false;
@@ -477,25 +500,38 @@ export const SupabaseService = {
 
   async addEmployee(newEmp: Employee): Promise<boolean> {
     try {
-      const { data: profiles } = await supabase.from('user_profiles').select('*');
-      if (profiles && profiles.length > 0) {
-        const primary = profiles[0];
-        const currentRoster: Employee[] = primary.metadata?.employee_roster || [];
-        currentRoster.push(newEmp);
+      const uid = newEmp.id && isUuid(newEmp.id) ? newEmp.id : crypto.randomUUID();
+      const meta = {
+        role: newEmp.role || 'Staff',
+        userLevel: newEmp.userLevel || newEmp.role || 'Technician',
+        department: newEmp.department || 'Operations',
+        skills: newEmp.skills || [],
+        email: newEmp.email || '',
+        phone: newEmp.phone || '',
+        avatarUrl: newEmp.avatarUrl || '',
+        availability: newEmp.availability || 'available',
+        score: newEmp.score || 90,
+        utilization: newEmp.utilization || 75,
+        baseLocation: newEmp.baseLocation || 'IKM Rayong (RY)',
+        bio: newEmp.bio || '',
+        certificates: newEmp.certificates || [],
+        education: newEmp.education || [],
+        experiences: newEmp.experiences || [],
+        isArchived: Boolean(newEmp.isArchived),
+      };
 
-        const { error } = await supabase
-          .from('user_profiles')
-          .update({
-            metadata: {
-              ...primary.metadata,
-              employee_roster: currentRoster,
-            }
-          })
-          .eq('user_id', primary.user_id);
+      const { error } = await supabase
+        .from('user_profiles')
+        .insert({
+          user_id: uid,
+          full_name: newEmp.name, // Real full_name
+          avatar_url: newEmp.avatarUrl || null,
+          phone: newEmp.phone || null,
+          department_id: newEmp.departmentId || null,
+          metadata: meta,
+        });
 
-        return !error;
-      }
-      return false;
+      return !error;
     } catch (e) {
       console.error('addEmployee error:', e);
       return false;
@@ -996,78 +1032,62 @@ export const SupabaseService = {
       // Seed initial enterprise user profiles if none exist
       const { count: profileCount } = await supabase.from('user_profiles').select('*', { count: 'exact', head: true });
       if (profileCount === 0) {
-        const initialRoster: Employee[] = [
+        const initialProfiles = [
           {
-            id: '46de6855-477a-4a99-bb4c-7e627500fafa',
-            name: 'Somchai Suksan',
-            role: 'Site Manager',
-            department: 'Engineering',
-            avatarColor: '#F58220',
-            avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-            availability: 'available',
-            utilization: 85,
-            score: 98,
-            skills: ['Leadership', 'SCADA', 'Turbine Overhaul', 'Field Inspection'],
+            user_id: '46de6855-477a-4a99-bb4c-7e627500fafa',
+            full_name: 'Somchai Suksan',
+            avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
             phone: '081-998-8776',
-            email: 'somchai.s@ikm-ops.com',
+            metadata: {
+              role: 'Site Manager',
+              userLevel: 'Manager',
+              department: 'Engineering',
+              skills: ['Leadership', 'SCADA', 'Turbine Overhaul', 'Field Inspection'],
+              email: 'somchai.s@ikm-ops.com',
+            }
           },
           {
-            id: '57de6855-477a-4a99-bb4c-7e627500fafb',
-            name: 'Art Kitthana',
-            role: 'Lead Mechanical Engineer',
-            department: 'Maintenance',
-            avatarColor: '#10B981',
-            avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-            availability: 'available',
-            utilization: 75,
-            score: 95,
-            skills: ['Gas Turbine', 'Pressure Vessels', 'ISO 9001 Audit'],
+            user_id: '57de6855-477a-4a99-bb4c-7e627500fafb',
+            full_name: 'Art Kitthana',
+            avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
             phone: '089-112-3344',
-            email: 'art.k@ikm-ops.com',
+            metadata: {
+              role: 'Country Manager',
+              userLevel: 'Country Manager',
+              department: 'Management',
+              skills: ['Project Governance', 'Offshore Strategy', 'P&L Management'],
+              email: 'art.k@ikm-ops.com',
+            }
           },
           {
-            id: '68de6855-477a-4a99-bb4c-7e627500fafc',
-            name: 'Nattaporn S.',
-            role: 'Safety & HSE Officer',
-            department: 'Safety & HSE',
-            avatarColor: '#EF4444',
-            avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-            availability: 'busy',
-            utilization: 90,
-            score: 99,
-            skills: ['Hazard Analysis', 'Incident Investigation', 'Fire Safety'],
+            user_id: '68de6855-477a-4a99-bb4c-7e627500fafc',
+            full_name: 'Nattaporn S.',
+            avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
             phone: '082-334-5566',
-            email: 'nattaporn.s@ikm-ops.com',
+            metadata: {
+              role: 'Safety & HSE Officer',
+              userLevel: 'Coordinator',
+              department: 'Safety & HSE',
+              skills: ['Hazard Analysis', 'Incident Investigation', 'Fire Safety'],
+              email: 'nattaporn.s@ikm-ops.com',
+            }
           },
           {
-            id: '79de6855-477a-4a99-bb4c-7e627500fafd',
-            name: 'Prasert Boonmee',
-            role: 'Senior Electrical Engineer',
-            department: 'Operations',
-            avatarColor: '#3B82F6',
-            avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-            availability: 'available',
-            utilization: 60,
-            score: 91,
-            skills: ['Substation', 'High Voltage Relay', 'PLC Control'],
+            user_id: '79de6855-477a-4a99-bb4c-7e627500fafd',
+            full_name: 'Prasert Boonmee',
+            avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
             phone: '084-556-7788',
-            email: 'prasert.b@ikm-ops.com',
+            metadata: {
+              role: 'Senior Electrical Engineer',
+              userLevel: 'Supervisor',
+              department: 'Operations',
+              skills: ['Substation', 'High Voltage Relay', 'PLC Control'],
+              email: 'prasert.b@ikm-ops.com',
+            }
           }
         ];
 
-        await supabase.from('user_profiles').insert({
-          user_id: '46de6855-477a-4a99-bb4c-7e627500fafa',
-          full_name: 'Somchai Suksan',
-          avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-          phone: '081-998-8776',
-          metadata: {
-            role: 'Site Manager',
-            department: 'Engineering',
-            skills: ['Leadership', 'SCADA', 'Turbine Overhaul', 'Field Inspection'],
-            email: 'somchai.s@ikm-ops.com',
-            employee_roster: initialRoster,
-          }
-        });
+        await supabase.from('user_profiles').insert(initialProfiles);
       }
 
       // Seed initial realistic voice reports if none exist

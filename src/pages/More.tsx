@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from '../store/useStore';
+import { LogoutConfirmModal } from '../components/ui/LogoutConfirmModal';
 import { 
   LayoutDashboard, ClipboardList, MessageSquare, CheckSquare, 
   Users, Clock, PieChart, Briefcase, UsersRound, ListTodo, 
   CalendarDays, Layers, KanbanSquare, Network, Calendar, 
   BarChartHorizontal, Activity, CheckCircle, Star, ClipboardCheck, 
   FileText, Image as ImageIcon, Settings2, Bot, Mic, UserCog, ScrollText, ShieldCheck,
-  BookOpen
+  BookOpen, Wrench, LogOut, User as UserIcon
 } from 'lucide-react';
 
 const menuGroups = [
@@ -20,9 +22,10 @@ const menuGroups = [
     ]
   },
   {
-    title: 'บุคลากร & กำลังพล (Personnel & Manpower)',
+    title: 'บุคลากร & เครื่องมือ (Personnel & Equipment)',
     items: [
       { id: 'manpower', label: 'รายงาน Manpower\n(Job Report)', icon: FileText, color: 'from-ikm-orange to-ikm-orange-dark' },
+      { id: 'equipment', label: 'เครื่องมือหลัก\n(Equipment)', icon: Wrench, color: 'from-amber-500 to-orange-600' },
       { id: 'employee-availability', label: 'สถานะพนักงาน\n(Availability)', icon: Users, color: 'from-indigo-400 to-indigo-600' },
       { id: 'manpower-timeline', label: 'ไทม์ไลน์กำลังคน\n(Timeline)', icon: Clock, color: 'from-purple-400 to-purple-600' },
     ]
@@ -85,12 +88,31 @@ const menuGroups = [
 
 export function More() {
   const navigate = useNavigate();
+  const { user, language } = useStore();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  const isTH = language === 'TH';
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto pb-24 animate-in fade-in duration-300">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-ikm-text">เมนูเพิ่มเติม (More Options)</h1>
-        <p className="text-sm text-ikm-text-secondary">รวมฟังก์ชันการทำงานทั้งหมดของระบบ IKM Project Management</p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-ikm-text">
+            {isTH ? 'เมนูเพิ่มเติม (More Options)' : 'More Options & Tools'}
+          </h1>
+          <p className="text-sm text-ikm-text-secondary">
+            {isTH ? 'รวมฟังก์ชันการทำงานทั้งหมดของระบบ IKM Project Management' : 'Comprehensive directory of all system modules and tools'}
+          </p>
+        </div>
+
+        {/* Quick Logout Button on Top Header */}
+        <button
+          onClick={() => setIsLogoutModalOpen(true)}
+          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 dark:bg-red-950/40 dark:hover:bg-red-600 border border-red-200 dark:border-red-900/60 transition-all shadow-sm group"
+        >
+          <LogOut className="w-4 h-4 text-red-500 group-hover:text-white transition-colors" />
+          <span>{isTH ? 'ออกจากระบบ (Logout)' : 'Sign Out'}</span>
+        </button>
       </div>
 
       <div className="space-y-8">
@@ -121,7 +143,48 @@ export function More() {
             </div>
           </div>
         ))}
+
+        {/* Account & Session Control Section */}
+        {user && (
+          <div className="bg-gradient-to-r from-red-50/50 via-ikm-card to-orange-50/50 dark:from-red-950/20 dark:via-ikm-card dark:to-orange-950/20 rounded-2xl p-5 md:p-6 border border-red-200/60 dark:border-red-900/40 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-ikm-orange to-amber-500 text-white font-bold flex items-center justify-center text-lg shadow-md shrink-0">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-full h-full rounded-2xl object-cover" />
+                ) : (
+                  user.name.charAt(0)
+                )}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-ikm-text">{user.name}</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-ikm-orange/15 text-ikm-orange border border-ikm-orange/30">
+                    {user.userLevel || user.role}
+                  </span>
+                </div>
+                <p className="text-xs text-ikm-text-secondary mt-0.5">
+                  {user.department || 'Operations'} • {user.email || 'somchai.s@ikm-ops.com'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full md:w-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-ikm-border">
+              <button
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-red-600 hover:bg-red-700 active:scale-98 transition-all shadow-md shadow-red-500/20"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>{isTH ? 'ออกจากระบบ (Logout)' : 'Sign Out / Logout'}</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+      />
     </div>
   );
 }
