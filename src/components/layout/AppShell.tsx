@@ -40,10 +40,12 @@ import {
   Wrench,
   UserCheck,
   LogOut,
+  Workflow,
 } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { EditUserProfileModal } from "../ui/EditUserProfileModal";
 import { LogoutConfirmModal } from "../ui/LogoutConfirmModal";
+import { NotificationCenter } from "../common/NotificationCenter";
 import { cn } from "@/src/lib/utils";
 
 export function Header() {
@@ -58,12 +60,16 @@ export function Header() {
     isSidebarAutoHide,
     toggleSidebarAutoHide,
     setMobileMenuOpen,
-    switchRole
+    switchRole,
+    notifications
   } = useStore();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [logoLoaded, setLogoLoaded] = useState(true);
+
+  const unreadNotifs = notifications.filter(n => !n.read).length;
 
   return (
     <header className="sticky top-0 z-40 flex h-14 md:h-16 w-full items-center justify-between border-b border-ikm-border bg-ikm-card px-3 md:px-6 shadow-sm">
@@ -133,11 +139,17 @@ export function Header() {
             >
               <option value="Admin" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Admin</option>
               <option value="Country Manager" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Country Manager</option>
-              <option value="Manager" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Manager</option>
+              <option value="Operation Manager" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Operation Manager</option>
+              <option value="Project Manager" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Project Manager</option>
               <option value="Coordinator" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Coordinator</option>
               <option value="Supervisor" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Supervisor</option>
               <option value="Technician" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Technician</option>
-              <option value="Requester" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Requester</option>
+              <option value="Equipment Controller" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Equipment Controller</option>
+              <option value="QA/QC" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">QA/QC</option>
+              <option value="HSE" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">HSE</option>
+              <option value="Finance" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Finance</option>
+              <option value="Sales / Requester" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Sales / Requester</option>
+              <option value="Customer" className="text-slate-900 bg-white dark:bg-slate-900 dark:text-white">Customer</option>
             </select>
           </div>
         )}
@@ -162,9 +174,17 @@ export function Header() {
         <button className="p-2 text-ikm-text-secondary hover:bg-ikm-bg rounded-lg transition-colors hidden md:block">
           <Search className="h-5 w-5" />
         </button>
-        <button className="relative p-2 text-ikm-text-secondary hover:bg-ikm-bg rounded-lg transition-colors">
+        <button 
+          onClick={() => setIsNotifOpen(true)}
+          className="relative p-2 text-ikm-text-secondary hover:bg-ikm-bg rounded-lg transition-colors"
+          title="Notifications"
+        >
           <Bell className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-status-red border-2 border-ikm-card"></span>
+          {unreadNotifs > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-status-red px-1 text-[9px] font-bold text-white border-2 border-ikm-card">
+              {unreadNotifs}
+            </span>
+          )}
         </button>
         {user && (
           <div 
@@ -213,6 +233,11 @@ export function Header() {
         )}
       </div>
 
+      <NotificationCenter
+        isOpen={isNotifOpen}
+        onClose={() => setIsNotifOpen(false)}
+      />
+
       {user && (
         <EditUserProfileModal
           isOpen={isProfileModalOpen}
@@ -231,18 +256,23 @@ export function Header() {
 const navItems = [
   { id: "home", label: "Home", path: "/", icon: <Home className="h-5 w-5" /> },
   {
+    id: "workflow",
+    label: "22-Step Workflow",
+    path: "/workflow",
+    icon: <Workflow className="h-5 w-5" />,
+    badge: 1,
+  },
+  {
     id: "requests",
     label: "Requests",
     path: "/requests",
     icon: <ClipboardList className="h-5 w-5" />,
-    badge: 2,
   },
   {
     id: "tasks",
     label: "Tasks",
     path: "/tasks",
     icon: <CheckSquare className="h-5 w-5" />,
-    badge: 4,
   },
   {
     id: "calendar",
@@ -260,8 +290,15 @@ const navItems = [
 
 const sidebarCategories = [
   {
-    title: { EN: "Core", TH: "หลัก" },
+    title: { EN: "Core & Workflow", TH: "ระบบหลัก & ขั้นตอนงาน" },
     items: [
+      {
+        id: "workflow",
+        label: { EN: "22-Step Workflow Hub", TH: "ระบบปฏิบัติการ 22 ขั้นตอน" },
+        path: "/workflow",
+        icon: <Workflow />,
+        badge: 1,
+      },
       {
         id: "home",
         label: { EN: "Dashboard", TH: "แดชบอร์ด" },

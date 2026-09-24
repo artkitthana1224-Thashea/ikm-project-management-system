@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '@/src/store/useStore';
 import { Button } from '@/src/components/ui/Button';
 import { Card } from '@/src/components/ui/Card';
-import { Shield, Lock, User as UserIcon, LogIn } from 'lucide-react';
+import { Shield, Lock, User as UserIcon, LogIn, AlertCircle, Clock } from 'lucide-react';
 import { SupabaseService } from '@/src/lib/supabaseService';
 
 export function Login() {
@@ -11,6 +11,17 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [isSessionExpired, setIsSessionExpired] = useState(false);
+
+  useEffect(() => {
+    try {
+      const expiredReason = localStorage.getItem('ikm_session_expired');
+      if (expiredReason === 'timeout') {
+        setIsSessionExpired(true);
+        localStorage.removeItem('ikm_session_expired');
+      }
+    } catch (e) {}
+  }, []);
 
   const t = {
     EN: {
@@ -197,6 +208,22 @@ export function Login() {
             <h2 className="text-2xl font-bold text-ikm-text tracking-tight">{t.welcome}</h2>
             <p className="text-xs text-ikm-text-secondary mt-1.5">{t.subtitle}</p>
           </div>
+
+          {isSessionExpired && (
+            <div className="mb-4 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 flex items-start gap-3 text-left animate-in fade-in slide-in-from-top-2 duration-300">
+              <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-xs text-amber-800 dark:text-amber-200">
+                <p className="font-bold">
+                  {language === 'TH' ? 'เซสชันหมดอายุ (Session Timeout)' : 'Session Expired'}
+                </p>
+                <p className="mt-0.5 leading-relaxed text-amber-700 dark:text-amber-300">
+                  {language === 'TH' 
+                    ? 'ไม่มีการใช้งานเกิน 5 นาที ระบบได้นำคุณออกจากระบบอัตโนมัติเพื่อความปลอดภัย กรุณาเข้าสู่ระบบใหม่อีกครั้ง' 
+                    : 'Your session has ended due to 5 minutes of inactivity. Please sign in again to continue.'}
+                </p>
+              </div>
+            </div>
+          )}
 
           <Card className="border border-ikm-border shadow-md">
             <div className="p-6 sm:p-8">

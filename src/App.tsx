@@ -27,11 +27,13 @@ import { EquipmentList } from './pages/EquipmentList';
 import { AuditLog } from './pages/AuditLog';
 import { CalendarView } from './pages/CalendarView';
 import { UserManual } from './pages/UserManual';
+import { EngineeringWorkflow } from './pages/EngineeringWorkflow';
 import { 
   ProjList, ProjCalendar, TaskMgmt, ProjBoard, SubProject,
   PhotoReport, CustomReport, AIAssist, VoiceReport, Security
 } from './pages/Modules';
 import { AppShell } from './components/layout/AppShell';
+import { SessionTimeout } from './components/common/SessionTimeout';
 
 // Map store's activeTab to URL path
 function RouteSync() {
@@ -78,11 +80,13 @@ export default function App() {
   
   return (
     <Router>
+      <SessionTimeout />
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
         
         {/* Core Nav Routes */}
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/workflow" element={<ProtectedRoute><EngineeringWorkflow /></ProtectedRoute>} />
         <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
         <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
         <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
