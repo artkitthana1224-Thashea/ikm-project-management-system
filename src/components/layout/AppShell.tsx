@@ -49,6 +49,7 @@ import { NotificationCenter } from "../common/NotificationCenter";
 import { cn } from "@/src/lib/utils";
 
 export function Header() {
+  const navigate = useNavigate();
   const { 
     user, 
     theme, 
@@ -153,6 +154,16 @@ export function Header() {
             </select>
           </div>
         )}
+
+        {/* Quick User Manual Link */}
+        <button
+          onClick={() => navigate('/manual')}
+          className="flex items-center gap-1 px-2.5 py-1.5 text-ikm-text-secondary hover:text-ikm-orange hover:bg-ikm-bg rounded-lg transition-colors text-xs font-semibold border border-ikm-border"
+          title={language === 'TH' ? 'เปิดคู่มือการใช้งานระบบ (User Manual)' : 'Open User Manual & SOP Guide'}
+        >
+          <BookOpen className="h-3.5 w-3.5 text-ikm-orange" />
+          <span className="hidden sm:inline">{language === 'TH' ? 'คู่มือ' : 'Manual'}</span>
+        </button>
 
         <button
           onClick={() => setLanguage(language === "EN" ? "TH" : "EN")}

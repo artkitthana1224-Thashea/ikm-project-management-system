@@ -10,7 +10,7 @@ import {
   ClipboardCheck, FileText, UserCog, ScrollText, Mic, Sparkles,
   Layers, CheckCircle2, ArrowRight, Bookmark, Compass, HelpCircle,
   Smartphone, Laptop, MousePointer, Sliders, Shield, AlertTriangle,
-  Building2, FileSpreadsheet, Eye, Award, Info, Share2
+  Building2, FileSpreadsheet, Eye, Award, Info, Share2, Workflow, Wrench
 } from 'lucide-react';
 
 interface ManualChapter {
@@ -114,6 +114,76 @@ export function UserManual() {
       tips: [
         'สามารถย่อ-ขยาย Sidebar ได้ด้วยปุ่มลูกศรเพื่อเพิ่มพื้นที่ทำงานบนหน้าจอ',
         'ข้อมูลโปรไฟล์จะเชื่อมโยงกับระบบจัดสรรกำลังคน Manpower อัตโนมัติ'
+      ]
+    },
+    {
+      id: 'chap-workflow',
+      menuId: 'workflow',
+      category: 'Core',
+      categoryTH: 'งานหลัก & กระบวนการ',
+      titleEN: '2. 22-Step Engineering Workflow & Coordinator Hub',
+      titleTH: '2. ระบบปฏิบัติการ 22 ขั้นตอน และการควบคุมโดย Coordinator',
+      icon: Workflow,
+      badge: 'Core Workflow',
+      path: '/workflow',
+      targetRole: 'Coordinator, Project Manager, Supervisor, QA/QC, Sales',
+      summaryEN: 'Complete end-to-end 22-step standard operating procedure for engineering service jobs from Work Request inception to 5D closeout evaluation.',
+      summaryTH: 'กระบวนการบริหารงานโครงการฉบับละเอียด 22 ขั้นตอน ตั้งแต่รับ Work Request, วางแผนคนและเครื่องมือหลัก, ตรวจสอบความพร้อม, Mobilization, ปฏิบัติงาน, ตรวจรับผลงาน จนถึงปิดงานและประเมินผล 5 มิติ',
+      steps: [
+        {
+          stepNumber: 1,
+          titleEN: 'Step 1-2: Create & Review Work Request',
+          titleTH: 'ขั้นตอนที่ 1-2: สร้างและตรวจสอบคำขอ (Sales & Coordinator)',
+          descriptionEN: 'Sales creates Work Request with Job Ref, Scope, Certifications, and Main Equipment. Coordinator verifies PO, site constraints, SLA, and completeness before approving to Under Review.',
+          descriptionTH: 'Sales / Requester สร้าง Work Request ระบุ Job Ref, Scope, Main Equipment, ใบเซอร์ที่ต้องการ จากนั้น Coordinator ตรวจสอบความครบถ้วน หากครบจะรับเข้าสู่การวางแผน หากไม่ครบจะส่งกลับแก้ไข',
+          tipTH: 'SLA งานปกติ 1 วันทำการ, งานเร่งด่วน 2-4 ชั่วโมง'
+        },
+        {
+          stepNumber: 2,
+          titleEN: 'Step 3-5: Risk Assessment & Resource Planning',
+          titleTH: 'ขั้นตอนที่ 3-5: ประเมินความเสี่ยงและวางแผนคน/อุปกรณ์',
+          descriptionEN: 'Assess complexity (Low/Medium/High/Critical). Plan certified Supervisor & Technicians. Book Main Equipment with conflict detection, calibration valid checks, and reserve backup tools.',
+          descriptionTH: 'ประเมินระดับความเสี่ยง (Low/Med/High/Critical), เลือก Supervisor และ Technician ที่มี Certificate ไม่หมดอายุ, จอง Main Equipment โดยระบบตรวจจับการชนกันของการจองและวันหมดอายุใบ Calibration ทันที',
+          tipTH: 'หากใบเซอร์หมดอายุภายใน 30 วัน ระบบจะแสดงป้ายเตือนสีส้ม'
+        },
+        {
+          stepNumber: 3,
+          titleEN: 'Step 6-8: Approval, Mobilization & Daily Reporting (DPR)',
+          titleTH: 'ขั้นตอนที่ 6-8: อนุมัติ มอบหมาย รวมพล และรายงานประจำวัน',
+          descriptionEN: 'Manager approves Job Plan. Complete Pre-Mob Checklist (PTW, JSA, PPE, Calibration). Team mobilizes to site. Supervisor logs daily progress, man-hours, equipment status, and HSE in DPR.',
+          descriptionTH: 'ผู้อนุมัติตามระดับความเสี่ยงอนุมัติ Job Plan, ทำ Pre-Mob Checklist, เดินทางเข้าหน้างาน (Mobilization), ปฏิบัติงานจริง และบันทึก Daily Progress Report (DPR) ส่งความคืบหน้าทุกวัน',
+          tipTH: 'หากมีขอบเขตงานเพิ่มขึ้นหรือล่าช้า สามารถเปิด Change Request หรือ Issue Incident ได้ทันที'
+        },
+        {
+          stepNumber: 4,
+          titleEN: 'Step 9-12: Inspection, Closeout & 5D Evaluation',
+          titleTH: 'ขั้นตอนที่ 9-12: ตรวจรับงาน Final Report ปิดงาน และประเมิน 5 มิติ',
+          descriptionEN: 'QA/QC and Client inspect deliverables (if fail -> NCR/Rework). Generate Final Report with client sign-off. Complete Closeout Checklist, return equipment, and evaluate 5 Dimensions.',
+          descriptionTH: 'ตรวจรับผลงาน (หากไม่ผ่านเปิด Rework/NCR), จัดทำ Final Report พร้อมลายเซ็นลูกค้า, คืนอุปกรณ์หลักพร้อมตรวจสภาพ, ปิดงาน และประเมินผล 5 มิติ (Quality, Safety, Schedule, Cost, Teamwork)',
+          tipTH: 'คะแนน 5D Score จะถูกบันทึกลงประวัติ Performance Audit ย้อนหลังได้ 100%'
+        }
+      ],
+      mockup: {
+        type: 'workflow_steps',
+        title: '22-Step Coordinator-Centric Lifecycle Engine',
+        elements: [
+          { label: '🧭 แถบ Pipeline 22 ขั้นตอน', description: 'แสดงสถานะสด: Draft -> Under Review -> Planned -> Mobilized -> In Progress -> Inspected -> Closed', color: 'border-orange-500 bg-orange-50 dark:bg-orange-950/30' },
+          { label: '🛠️ ระบบจองและแชร์ Main Equipment', description: 'ตรวจสอบสถานะอุปกรณ์ ใบ Calibration และตารางทับซ้อน ป้องกันการจองชนกัน', color: 'border-blue-500 bg-blue-50 dark:bg-blue-950/30' },
+          { label: '⭐ การประเมินผล 5 มิติ (5D Score)', description: 'ประเมินด้านคุณภาพ ความปลอดภัย กำหนดเวลา งบประมาณ และการประสานงาน', color: 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30' },
+        ],
+        notes: 'Coordinator สามารถติดตามสถานะของทุกโครงการได้จากหน้าต่างเดียวแบบศูนย์กลาง'
+      },
+      features: [
+        'End-to-End 22-Step Workflow Execution Engine',
+        'Coordinator-Centric Resource & Equipment Control',
+        'Pre-Mobilization Safety & Calibration Gatekeeper',
+        'Daily Progress Report (DPR) & Man-hour Tracking',
+        'Inspection, NCR, and Rework Management',
+        '5-Dimensional Performance Evaluation Matrix'
+      ],
+      tips: [
+        'สามารถสลับแถบขั้นตอนด้านบนเพื่อดูข้อมูลของแต่ละเฟสงาน เช่น Pre-Mob, DPR, Equipment Return ได้ทันที',
+        'ปุ่มเปลี่ยนสถานะงานด้านขวามือจะเปิดใช้งานตามสิทธิ์ Role ของผู้ใช้ปัจจุบันเท่านั้น'
       ]
     },
     {
